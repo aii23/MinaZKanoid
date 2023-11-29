@@ -5,7 +5,6 @@ import {
     GameRecordProof,
     GameRecordPublicOutput,
     checkGameRecord,
-    FIELD_SIZE,
     MAX_BRICKS,
     GAME_LENGTH,
     GameInputs,

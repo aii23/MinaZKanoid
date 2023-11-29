@@ -49,14 +49,6 @@ export const FIELD_PIXEL_WIDTH = 500;
 export const FIELD_PIXEL_HEIGHT = 500;
 export const PLATFORM_HALF_WIDTH = 50;
 
-export const FIELD_WIDTH = 5;
-export const FIELD_HEIGHT = 10;
-
-const ADJUST_KOEF = FIELD_PIXEL_WIDTH / FIELD_WIDTH;
-const BRICK_SIZE = FIELD_PIXEL_WIDTH / FIELD_WIDTH;
-
-export const FIELD_SIZE = FIELD_WIDTH * FIELD_HEIGHT;
-
 export const GAME_LENGTH = 100;
 
 export class Tick extends Struct({
@@ -143,7 +135,7 @@ export class GameContext extends Struct({
         /// 2) Update platform position
         this.platform.position = this.platform.position.add(1).sub(tick.action);
 
-        /// 3) Update ball position
+        // /// 3) Update ball position
         const prevBallPos = new IntPoint({
             x: this.ball.position.x,
             y: this.ball.position.y,
@@ -262,8 +254,6 @@ export class GameContext extends Struct({
                 x \incl [ brick.pos.x - BRICK_HALF_WIDTH, brick.pos.x + BRICK_HALF_WIDTH ]
                 bx \incl [b(brics.pos.x - BRICK_HALF_WIDTH, b(brick.pos.x + BRICK_HALF_WIDTH))]
                 ad - c \incl [b(brics.pos.x - BRICK_HALF_WIDTH, b(brick.pos.x + BRICK_HALF_WIDTH))]
-                
-
 
                 /////////////// horizontal part of a brick ////////////////////////////
                 x = d
