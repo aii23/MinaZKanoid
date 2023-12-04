@@ -328,6 +328,7 @@ export class GameContext extends Struct({
             let d3 = leftBorder;
             let bdc1 = b.mul(d3).add(c);
             let bdc1Sign = getSign(bdc1);
+
             let crossBrickLeft = a
                 .mul(topEnd)
                 .sub(bdc1)
