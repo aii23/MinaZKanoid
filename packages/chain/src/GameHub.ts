@@ -249,8 +249,8 @@ export class GameContext extends Struct({
                 y = d
                 ay = bx + c;
                 c = ay1 - bx1
-                    a - ball.speed.x
-                    b - ball.speed.y
+                    // a - ball.speed.x
+                    // b - ball.speed.y
                 bx = ay - c
                 bx = ad - c;
 
@@ -272,6 +272,14 @@ export class GameContext extends Struct({
             */
             let a = this.ball.speed.x;
             let b = this.ball.speed.y;
+
+            // let bMulLeftBorder = b.mul(leftBorder);
+            // let bMulRightBorder = b.mul(rightBorder);
+
+            /// b(brics.pos.x - BRICK_HALF_WIDTH)
+            let leftEnd = b.mul(this.ball.position.x.sub(BRICK_HALF_WIDTH));
+            let rightEnd = b.mul(this.ball.position.x.add(BRICK_HALF_WIDTH));
+
             let c = a
                 .mul(this.ball.position.y)
                 .sub(b.mul(this.ball.position.x));
@@ -280,10 +288,10 @@ export class GameContext extends Struct({
             let adc1 = a.mul(d1).sub(c);
             let adc1Sign = adc1.div(adc1.magnitude);
             let crossBrickTop = adc1
-                .sub(b.mul(leftBorder))
+                .sub(leftEnd)
                 .mul(adc1Sign)
                 .isPositive()
-                .and(b.mul(rightBorder).sub(adc1).mul(adc1Sign).isPositive());
+                .and(rightEnd.sub(adc1).mul(adc1Sign).isPositive());
             let hasTopBump = crossBrickTop.and(
                 prevBallPos.y.sub(topBorder).isPositive()
             ); // All 91c
@@ -294,25 +302,29 @@ export class GameContext extends Struct({
             let adc2 = a.mul(d2).sub(c);
             let adc2Sign = adc2.div(adc2.magnitude);
             let crossBrickBottom = adc2
-                .sub(b.mul(leftBorder))
+                .sub(leftEnd)
                 .mul(adc2Sign)
                 .isPositive()
-                .and(b.mul(rightBorder).sub(adc2).mul(adc2Sign).isPositive());
+                .and(rightEnd.sub(adc2).mul(adc2Sign).isPositive());
             let hasBottomBump = crossBrickBottom.and(
                 bottomBorder.sub(prevBallPos.y).isPositive()
             ); // All 90c
             // 287 by this point
 
+            let topEnd = a.mul(this.ball.position.y.add(BRICK_HALF_WIDTH));
+            let bottomEnd = a.mul(this.ball.position.y.sub(BRICK_HALF_WIDTH));
+
+            // let aMulBottomBorder = a.mul(bottomBorder);
             // Left vertical
             let d3 = leftBorder;
             let bdc1 = b.mul(d3).add(c);
             let bdc1Sign = bdc1.div(bdc1.magnitude);
             let crossBrickLeft = a
-                .mul(topBorder)
+                .mul(topEnd)
                 .sub(bdc1)
                 .mul(bdc1Sign)
                 .isPositive()
-                .and(bdc1.sub(a.mul(bottomBorder)).mul(bdc1Sign).isPositive());
+                .and(bdc1.sub(bottomEnd).mul(bdc1Sign).isPositive());
             let hasLeftBump = crossBrickLeft.and(
                 leftBorder.sub(prevBallPos.x).isPositive()
             ); // All 91c
@@ -323,11 +335,11 @@ export class GameContext extends Struct({
             let bdc2 = b.mul(d4).add(c);
             let bdc2Sign = bdc2.div(bdc2.magnitude);
             let crossBrickRight = a
-                .mul(topBorder)
+                .mul(topEnd)
                 .sub(bdc2)
                 .mul(bdc2Sign)
                 .isPositive()
-                .and(bdc2.sub(a.mul(bottomBorder).mul(bdc2Sign)).isPositive());
+                .and(bdc2.sub(bottomEnd.mul(bdc2Sign)).isPositive());
             let hasRightBump = crossBrickRight.and(
                 prevBallPos.x.sub(rightBorder).isPositive()
             ); // All 90c
