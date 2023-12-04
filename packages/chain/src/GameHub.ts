@@ -42,14 +42,14 @@ export class Point extends Struct({
 
 export const INITIAL_SCORE = 99999;
 export const SCORE_PER_TICKS = 1;
-export const MAX_BRICKS = 10;
+export const MAX_BRICKS = 1;
 
 export const BRICK_HALF_WIDTH = 25;
 export const FIELD_PIXEL_WIDTH = 500;
 export const FIELD_PIXEL_HEIGHT = 500;
 export const PLATFORM_HALF_WIDTH = 50;
 
-export const GAME_LENGTH = 100;
+export const GAME_LENGTH = 1;
 
 export class Tick extends Struct({
     action: UInt64,
@@ -125,6 +125,7 @@ export class GameContext extends Struct({
     alreadyWon: Bool,
 }) {
     processTick(tick: Tick): void {
+        /*
         // 1) Update score
         this.score = Provable.if(
             this.alreadyWon,
@@ -134,6 +135,7 @@ export class GameContext extends Struct({
 
         /// 2) Update platform position
         this.platform.position = this.platform.position.add(1).sub(tick.action);
+        */
 
         // /// 3) Update ball position
         const prevBallPos = new IntPoint({
@@ -142,6 +144,8 @@ export class GameContext extends Struct({
         });
 
         this.ball.move();
+
+        /*
 
         /// 4) Check for edge bumps
 
@@ -208,38 +212,37 @@ export class GameContext extends Struct({
 
         this.winable = this.winable.and(isFail.not());
 
+        */
+
         //6) Check bricks bump
 
         for (let j = 0; j < MAX_BRICKS; j++) {
+            // 461c
             const currentBrick = this.bricks.bricks[j];
-            let isAlive = currentBrick.value.greaterThan(UInt64.from(1)); // 1 just so UInt64.sub do not underflow
-
-            let leftBorder = currentBrick.pos.x.sub(BRICK_HALF_WIDTH);
-            let rightBorder = currentBrick.pos.x.add(BRICK_HALF_WIDTH);
-            let topBorder = currentBrick.pos.y.add(BRICK_HALF_WIDTH);
-            let bottomBorder = currentBrick.pos.y.sub(BRICK_HALF_WIDTH);
-
+            let isAlive = currentBrick.value.greaterThan(UInt64.from(1)); // 19c | 1 just so UInt64.sub do not underflow
+            let leftBorder = currentBrick.pos.x.sub(BRICK_HALF_WIDTH); // 6c
+            let rightBorder = currentBrick.pos.x.add(BRICK_HALF_WIDTH); // 6c
+            let topBorder = currentBrick.pos.y.add(BRICK_HALF_WIDTH); // 6c
+            let bottomBorder = currentBrick.pos.y.sub(BRICK_HALF_WIDTH); // 6c
+            // 70 c by this point(1 brick 1 tick)
             /*
             Collision
                 ball.pos.x \inc [leftBorder, rightBorder]
                 ball.pos.y \inc [bottomBorder, topBorder]
 
             */
-
             const horizontalCollision = rightBorder
                 .sub(this.ball.position.x)
                 .isPositive()
-                .and(this.ball.position.x.sub(leftBorder).isPositive());
-
+                .and(this.ball.position.x.sub(leftBorder).isPositive()); // 18c
             const verticalCollision = topBorder
                 .sub(this.ball.position.y)
                 .isPositive()
-                .and(this.ball.position.y.sub(bottomBorder).isPositive());
-
+                .and(this.ball.position.y.sub(bottomBorder).isPositive()); // 17c (1 less then previous???)
             const collisionHappen = isAlive.and(
                 horizontalCollision.and(verticalCollision)
-            );
-
+            ); // 1c
+            // 106 c by this point(1 brick 1 tick)
             /*
                 Detect where collision ocured
                 /////////////// vertical part of a brick //////////////////////////
@@ -267,13 +270,11 @@ export class GameContext extends Struct({
                 ay \incl [ a(brick.pos.y - BRICK_HALF_WIDTH), a(brick.pos.y + BRICK_HALF_WIDTH)]
                 bd + c \incl [ a(brick.pos.y - BRICK_HALF_WIDTH), a(brick.pos.y + BRICK_HALF_WIDTH)]
             */
-
             let a = this.ball.speed.x;
             let b = this.ball.speed.y;
             let c = a
                 .mul(this.ball.position.y)
                 .sub(b.mul(this.ball.position.x));
-
             // Top horizontal
             let d1 = topBorder;
             let adc1 = a.mul(d1).sub(c);
@@ -285,9 +286,10 @@ export class GameContext extends Struct({
                 .and(b.mul(rightBorder).sub(adc1).mul(adc1Sign).isPositive());
             let hasTopBump = crossBrickTop.and(
                 prevBallPos.y.sub(topBorder).isPositive()
-            );
+            ); // All 91c
+            // 197c by this point
 
-            // Bottom horisontal
+            // // Bottom horisontal
             let d2 = bottomBorder;
             let adc2 = a.mul(d2).sub(c);
             let adc2Sign = adc2.div(adc2.magnitude);
@@ -298,7 +300,8 @@ export class GameContext extends Struct({
                 .and(b.mul(rightBorder).sub(adc2).mul(adc2Sign).isPositive());
             let hasBottomBump = crossBrickBottom.and(
                 bottomBorder.sub(prevBallPos.y).isPositive()
-            );
+            ); // All 90c
+            // 287 by this point
 
             // Left vertical
             let d3 = leftBorder;
@@ -312,7 +315,8 @@ export class GameContext extends Struct({
                 .and(bdc1.sub(a.mul(bottomBorder)).mul(bdc1Sign).isPositive());
             let hasLeftBump = crossBrickLeft.and(
                 leftBorder.sub(prevBallPos.x).isPositive()
-            );
+            ); // All 91c
+            // 378 by this point
 
             // Right vertical
             let d4 = rightBorder;
@@ -326,39 +330,36 @@ export class GameContext extends Struct({
                 .and(bdc2.sub(a.mul(bottomBorder).mul(bdc2Sign)).isPositive());
             let hasRightBump = crossBrickRight.and(
                 prevBallPos.x.sub(rightBorder).isPositive()
-            );
+            ); // All 90c
+            // 468 By this point
 
-            // Reduce health if coliision happend and brick is not dead
-
+            // // Reduce health if coliision happend and brick is not dead
             currentBrick.value = Provable.if(
                 collisionHappen,
                 currentBrick.value.sub(1),
                 currentBrick.value
             );
-
             this.totalLeft = Provable.if(
                 collisionHappen,
                 this.totalLeft.sub(1),
                 this.totalLeft
             );
-
             this.alreadyWon = Provable.if(
                 this.totalLeft.equals(UInt64.from(1)),
                 Bool(true),
                 this.alreadyWon
             );
-
             this.ball.speed.x = Provable.if(
                 collisionHappen.and(hasLeftBump.or(hasRightBump)),
                 this.ball.speed.x.neg(),
                 this.ball.speed.x
             );
-
             this.ball.speed.y = Provable.if(
                 collisionHappen.and(hasBottomBump.or(hasTopBump)),
                 this.ball.speed.y.neg(),
                 this.ball.speed.y
-            );
+            ); // 20 for 5 if blocks
+            // 488 by this point
         }
     }
 }
