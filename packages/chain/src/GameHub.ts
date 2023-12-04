@@ -280,13 +280,22 @@ export class GameContext extends Struct({
             let leftEnd = b.mul(this.ball.position.x.sub(BRICK_HALF_WIDTH));
             let rightEnd = b.mul(this.ball.position.x.add(BRICK_HALF_WIDTH));
 
+            const getSign = (x: Int64) => {
+                return Provable.if(
+                    x.isPositive(),
+                    Int64.from(1),
+                    Int64.from(-1)
+                );
+            };
+
             let c = a
                 .mul(this.ball.position.y)
                 .sub(b.mul(this.ball.position.x));
             // Top horizontal
             let d1 = topBorder;
             let adc1 = a.mul(d1).sub(c);
-            let adc1Sign = adc1.div(adc1.magnitude);
+            let adc1Sign = getSign(adc1);
+            // let adc1Sign = Int64.from(1);
             let crossBrickTop = adc1
                 .sub(leftEnd)
                 .mul(adc1Sign)
@@ -300,7 +309,7 @@ export class GameContext extends Struct({
             // // Bottom horisontal
             let d2 = bottomBorder;
             let adc2 = a.mul(d2).sub(c);
-            let adc2Sign = adc2.div(adc2.magnitude);
+            let adc2Sign = getSign(adc2);
             let crossBrickBottom = adc2
                 .sub(leftEnd)
                 .mul(adc2Sign)
@@ -318,7 +327,7 @@ export class GameContext extends Struct({
             // Left vertical
             let d3 = leftBorder;
             let bdc1 = b.mul(d3).add(c);
-            let bdc1Sign = bdc1.div(bdc1.magnitude);
+            let bdc1Sign = getSign(bdc1);
             let crossBrickLeft = a
                 .mul(topEnd)
                 .sub(bdc1)
@@ -333,7 +342,7 @@ export class GameContext extends Struct({
             // Right vertical
             let d4 = rightBorder;
             let bdc2 = b.mul(d4).add(c);
-            let bdc2Sign = bdc2.div(bdc2.magnitude);
+            let bdc2Sign = getSign(bdc2);
             let crossBrickRight = a
                 .mul(topEnd)
                 .sub(bdc2)
@@ -345,7 +354,7 @@ export class GameContext extends Struct({
             ); // All 90c
             // 468 By this point
 
-            // // Reduce health if coliision happend and brick is not dead
+            // Reduce health if coliision happend and brick is not dead
             currentBrick.value = Provable.if(
                 collisionHappen,
                 currentBrick.value.sub(1),
