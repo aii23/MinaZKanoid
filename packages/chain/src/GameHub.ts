@@ -29,7 +29,9 @@ import {
     MAX_BRICKS,
     PLATFORM_HALF_WIDTH,
     SCORE_PER_TICKS,
+    TICK_PERIOD,
 } from './constants';
+import { ProvableBigint } from 'o1js/dist/node/bindings/lib/provable-bigint';
 
 export class GameRecordKey extends Struct({
     seed: UInt64,
@@ -57,6 +59,7 @@ export class Point extends Struct({
 
 export class Tick extends Struct({
     action: UInt64,
+    dt: UInt64,
 }) {}
 
 export class GameInputs extends Struct({
@@ -103,9 +106,13 @@ class Ball extends Struct({
     position: IntPoint,
     speed: IntPoint,
 }) {
-    move(): void {
-        this.position.x = this.position.x.add(this.speed.x);
-        this.position.y = this.position.y.add(this.speed.y);
+    move(dt: UInt64): void {
+        this.position.x = this.position.x.add(
+            this.speed.x.mul(dt).div(TICK_PERIOD)
+        ); // Mul consume too much!!!
+        this.position.y = this.position.y.add(
+            this.speed.y.mul(dt).div(TICK_PERIOD)
+        ); // #TODO check whats wrong
     }
 }
 
@@ -169,7 +176,7 @@ export class GameContext extends Struct({
             y: this.ball.position.y,
         });
 
-        this.ball.move();
+        this.ball.move(tick.dt);
 
         /// 4) Check for edge bumps
 
@@ -244,6 +251,7 @@ export class GameContext extends Struct({
         //6) Check bricks bump
 
         for (let j = 0; j < MAX_BRICKS; j++) {
+            // for (let j = 0; j < 0; j++) {
             const currentBrick = this.bricks.bricks[j];
             let isAlive = currentBrick.value.greaterThan(UInt64.from(1)); // 1 just so UInt64.sub do not underflow
 
@@ -453,14 +461,16 @@ export class GameContext extends Struct({
             );
         }
 
-        if (this.debug.toBoolean()) {
-            console.log(
-                `Ball position: <${this.ball.position.x} : ${this.ball.position.y}>`
-            );
-            console.log(
-                `Ball speed: ${this.ball.speed.x} : ${this.ball.speed.y}`
-            );
-        }
+        Provable.asProver(() => {
+            if (this.debug.toBoolean()) {
+                console.log(
+                    `Ball position: <${this.ball.position.x} : ${this.ball.position.y}>`
+                );
+                console.log(
+                    `Ball speed: ${this.ball.speed.x} : ${this.ball.speed.y}`
+                );
+            }
+        });
     }
 }
 
