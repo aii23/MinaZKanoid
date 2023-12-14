@@ -115,8 +115,9 @@ export const GameView = (props: IGameViewProps) => {
       drawBallsTraces();
     }
 
-    if (Date.now() - lastUpdateTime > tickPeriod) {
-      pushTick(1);
+    const elapsedTime = Date.now() - lastUpdateTime;
+    if (elapsedTime > tickPeriod) {
+      pushTick(1, elapsedTime);
       // ticksCache.push(1);
       // setTicks([...ticksCache, 1]);
       lastUpdateTime = Date.now();
@@ -138,8 +139,8 @@ export const GameView = (props: IGameViewProps) => {
   };
 
   const moveBall = (elapsed: number) => {
-    ball.x += (ball.dx * elapsed) / 1000;
-    ball.y += (ball.dy * elapsed) / 1000;
+    ball.x += (ball.dx * elapsed) / tickPeriod;
+    ball.y += (ball.dy * elapsed) / tickPeriod;
 
     if (ball.x + ball.radius > FIELD_WIDTH || ball.x - ball.radius < 0) {
       ball.dx *= -1;
@@ -285,12 +286,12 @@ export const GameView = (props: IGameViewProps) => {
 
   const keyDown = (e: KeyboardEvent) => {
     if (e.key === "Right" || e.key === "ArrowRight") {
+      const elapsedTime = Date.now() - lastUpdateTime;
       if (
-        Date.now() - lastUpdateTime >
-        tickPeriod
+        elapsedTime > tickPeriod
         // ticksCache[ticksCache.length - 1] != 2
       ) {
-        pushTick(2);
+        pushTick(2, elapsedTime);
         // ticksCache.push(2);
         //   setTicks([...ticksCache, 2]);
         lastUpdateTime = Date.now();
@@ -298,12 +299,12 @@ export const GameView = (props: IGameViewProps) => {
 
       cart.dx = 4;
     } else if (e.key === "Left" || e.key === "ArrowLeft") {
+      const elapsedTime = Date.now() - lastUpdateTime;
       if (
-        Date.now() - lastUpdateTime >
-        tickPeriod
+        elapsedTime > tickPeriod
         // ticksCache[ticksCache.length - 1] != 0
       ) {
-        pushTick(0);
+        pushTick(0, elapsedTime);
         // ticksCache.push(0);
         //   setTicks([...ticksCache, 0]);
         lastUpdateTime = Date.now();
@@ -477,12 +478,27 @@ export const GameView = (props: IGameViewProps) => {
     return [pos[0] + speed[0] * t, pos[1] + speed[1] * t];
   };
 
-  const pushTick = (action: number) => {
+  const syncBallPosition = () => {
+    ball.x = contractBall.x;
+    ball.y = contractBall.y;
+  };
+
+  const pushTick = (action: number, elapsedTime: number) => {
+    console.log(elapsedTime);
     ticksCache.push(action);
     if (!debugModeRef.current) {
       // Is not in debug mode - just process tick
       //@ts-ignore
-      gameContext.processTick(new Tick({ action: UInt64.from(action) }));
+      gameContext.processTick(
+        new Tick({ action: UInt64.from(action), dt: UInt64.from(elapsedTime) }),
+      );
+      let [x, y] = [
+        gameContext.ball.position.x * 1,
+        gameContext.ball.position.y * 1,
+      ];
+      contractBall.x = x;
+      contractBall.y = y;
+
       contractBallTrace = [];
     } else {
       let prevPos: [number, number] =
@@ -495,7 +511,9 @@ export const GameView = (props: IGameViewProps) => {
         gameContext.ball.speed.y * 1,
       ];
       //@ts-ignore
-      gameContext.processTick(new Tick({ action: UInt64.from(action) }));
+      gameContext.processTick(
+        new Tick({ action: UInt64.from(action), dt: UInt64.from(elapsedTime) }),
+      );
       let [x, y] = [
         gameContext.ball.position.x * 1,
         gameContext.ball.position.y * 1,
@@ -529,6 +547,8 @@ export const GameView = (props: IGameViewProps) => {
         })
         .filter((brick: IContractBrickPorted) => brick.value > 1);
     }
+
+    syncBallPosition();
   };
 
   return (
