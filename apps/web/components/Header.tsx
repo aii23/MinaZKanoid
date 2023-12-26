@@ -41,9 +41,6 @@ export default function Header({
                         <div>
                             Balance: {balance || 0} 🪙
                         </div>
-                        <div>
-                            Balance: {balance || 0} 🪙
-                        </div>
                     </div>
                 </div>
             </div>
