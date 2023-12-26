@@ -12,6 +12,7 @@ import {
 } from 'zknoid-chain';
 import { Bool, UInt64 } from 'o1js';
 import { ROUND_PRICE } from '@/app/constants';
+import Link from 'next/link';
 
 enum GameState {
   NotStarted,
@@ -27,6 +28,12 @@ interface UserTop {
   score: number;
 }
 
+interface ActiveCompetition {
+  name: string;
+  address: `0x${string}` | string | undefined;
+  fund: number;
+}
+
 export default function Home({
   params,
 }: {
@@ -36,6 +43,7 @@ export default function Home({
   const [gameState, setGameState] = useState(GameState.NotStarted);
   const [lastTicks, setLastTicks] = useState<number[]>([]);
   const [score, setScore] = useState<number>(0);
+  const [ticksAmount, setTicksAmount] = useState<number>(0);
 
   const [topUsers, setTopUsers] = useState<UserTop[]>([
     {
@@ -45,6 +53,21 @@ export default function Home({
     {
       address: '0xE314CE1514B21f4dc39C546b3c3bca317652d0Ac',
       score: 70,
+    },
+  ]);
+
+  const [activeCompetitions, setActiveCompetitions] = useState<
+    ActiveCompetition[]
+  >([
+    {
+      name: 'Global',
+      address: 'global',
+      fund: 100,
+    },
+    {
+      name: 'Mina competition',
+      address: undefined,
+      fund: 50,
     },
   ]);
 
@@ -152,19 +175,31 @@ export default function Home({
         gameId={gameId}
         debug={debug}
         setScore={setScore}
+        setTicksAmount={setTicksAmount}
       />
-      <div>
-        Score: {score}
-      </div>
+      <div>Score: {score}</div>
+      <div>Ticks: {ticksAmount}</div>
       <div className="grow"></div>
-      <div>
-        Leaderboard {params.competitionId}:
+      <div className="flex flex-col gap-10">
         <div>
-          {topUsers.map((user) => (
-            <div key={user.address}>
-              {user.address} – {user.score} pts
-            </div>
-          ))}
+          Leaderboard {params.competitionId}:
+          <div>
+            {topUsers.map((user) => (
+              <div key={user.address}>
+                {user.address} – {user.score} pts
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          Active competitions:
+          <div className="flex flex-col">
+            {activeCompetitions.map((competition) => (
+              <Link href={`/arkanoid/${competition.address}`}>
+                {competition.name} – {competition.fund} 🪙
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
       <div className="w-full text-end">

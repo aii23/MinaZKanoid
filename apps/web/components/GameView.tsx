@@ -30,6 +30,7 @@ interface IGameViewProps {
   onWin: (ticks: number[]) => void;
   onLost: (ticks: number[]) => void;
   setScore: (score: number) => void;
+  setTicksAmount: (ticksAmount: number) => void;
   level: Bricks;
   debug: boolean;
 }
@@ -189,6 +190,19 @@ export const GameView = (props: IGameViewProps) => {
 
     ballTrace.push([ball.x, ball.y]);
 
+    const bricksNum = gameContext.bricks.bricks
+      .map((brick: IContractBrick) => {
+        return {
+          value: +brick.value.toString(),
+        } as IContractBrickPorted;
+      })
+      .filter((brick: IContractBrickPorted) => brick.value > 1).length;
+
+    if (bricksNum == 0) {
+      stopped = true;
+      return onWin();
+    }
+
     bricks.forEach((brick) => {
       if (brick.value > 1) {
         if (
@@ -228,11 +242,6 @@ export const GameView = (props: IGameViewProps) => {
 
           brick.value = 1;
           bricksLeft -= 1;
-
-          if (bricksLeft == 0) {
-            stopped = true;
-            return onWin();
-          }
         }
       }
     });
@@ -264,7 +273,7 @@ export const GameView = (props: IGameViewProps) => {
     bricks.forEach((brick) => {
       ctx!.beginPath();
       ctx!.rect(brick.x, brick.y, brick.w, brick.h);
-      ctx!.fillStyle = brick.value > 1 ? "#0095dd" : "transparent";
+      ctx!.fillStyle = brick.value > 1 ? '#0095dd' : 'transparent';
       ctx!.fill();
       ctx!.closePath();
     });
@@ -607,6 +616,7 @@ export const GameView = (props: IGameViewProps) => {
       };
     }
 
+    props.setTicksAmount(ticksCache.length);
     props.setScore(gameContext.score * 1);
 
     sync();
