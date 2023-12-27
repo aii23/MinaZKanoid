@@ -1,31 +1,6 @@
-import {
-    Experimental,
-    PublicKey,
-    Field,
-    UInt64,
-    Struct,
-    Provable,
-    Int64,
-    Bool,
-} from 'o1js';
+import { PublicKey, UInt64, Struct, Provable, Int64, Bool } from 'o1js';
 
-import {
-    BRICK_HALF_WIDTH,
-    DEFAULT_BALL_LOCATION_X,
-    DEFAULT_BALL_LOCATION_Y,
-    DEFAULT_BALL_SPEED_X,
-    DEFAULT_BALL_SPEED_Y,
-    DEFAULT_PLATFORM_SPEED,
-    DEFAULT_PLATFORM_X,
-    FIELD_PIXEL_HEIGHT,
-    FIELD_PIXEL_WIDTH,
-    FIELD_WIDTH,
-    GAME_LENGTH,
-    INITIAL_SCORE,
-    MAX_BRICKS,
-    PLATFORM_HALF_WIDTH,
-    SCORE_PER_TICKS,
-} from './constants';
+import { GAME_LENGTH, MAX_BRICKS } from './constants';
 
 export class GameRecordKey extends Struct({
     seed: UInt64,
@@ -72,6 +47,10 @@ export class IntPoint extends Struct({
             x: Int64.from(_x),
             y: Int64.from(_y),
         });
+    }
+
+    equal(b: IntPoint): Bool {
+        return this.x.equals(b.x).and(this.y.equals(b.y));
     }
 }
 
