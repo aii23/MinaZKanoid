@@ -1,5 +1,7 @@
 # ZKnoid
 
+Moved [here] (https://github.com/ZkNoid/zknoid).
+
 ZKnoid is a onchain arkanoid game on [Mina protocol](https://minaprotocol.com/).
 It was created on EthGlobal Istnabul by @asimaranov and @aii23 and [won](https://ethglobal.com/showcase/zknoid-nr5ef) Mina 2nd place.
 
